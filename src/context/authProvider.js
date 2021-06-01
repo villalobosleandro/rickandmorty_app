@@ -8,7 +8,7 @@ export const AuthProvider = ({children}) => {
 
     const login = async (email, password) => {
         try {
-            await auth().signInWithEmailAndPassword(email, password);
+            await auth().signInWithEmailAndPassword(email.toLowerCase(), password);
         } catch (e) {
             console.log('Errorrrrrrrrrr => ', e);
             return e;
@@ -19,9 +19,8 @@ export const AuthProvider = ({children}) => {
         const { email, password, firstName, lastName } = data;
 
         try {
-            await auth().createUserWithEmailAndPassword(email, password)
+            await auth().createUserWithEmailAndPassword(email.toLowerCase(), password)
                 .then((response) => {
-                    console.log('response => ', response);
                 })
                 .catch(error => {
                     console.log('error ', error);

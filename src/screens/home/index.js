@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {
     Text, FlatList, View, ActivityIndicator, SafeAreaView,
-    StyleSheet, Image
+    StyleSheet, Image, TouchableOpacity
 } from 'react-native';
 
 import { CardCharacter } from './components/cardCharacter';
@@ -13,6 +13,7 @@ export const Home = props => {
     const [loading, setLoading] = useState(true);
     const [characters, setCharacters] = useState([]);
     const [handleLoadMore , setHandleLoadMore] = useState(false);
+    const [nextPage, setNextPage] = useState(null);
 
     useEffect(() => {
         _getCharacter();
@@ -24,7 +25,9 @@ export const Home = props => {
             .then(response => response.json())
             .then(data => {
                 setLoading(false);
-                setCharacters(data.results)
+                setCharacters(data.results);
+                setNextPage(data.info.next);
+
             })
             .catch((error) => {
                 console.error('Error:', error);
@@ -53,13 +56,30 @@ export const Home = props => {
         </View>
     );
 
-    const loadMoreData = async () => {
-        console.log("test");
-        if(!stopFetchMore) {
-            console.log("llamo mas data");
-            stopFetchMore = true;
-        }
+    const _loadMoreData = async () => {
+
+        fetch(nextPage)
+            .then(response => response.json())
+            .then(data => {
+                setLoading(false);
+                setCharacters([...characters, ...data.results]);
+                setNextPage(data.info.next);
+
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     };
+
+    const loadMoreDataComponent = () => (
+            <TouchableOpacity
+                onPress={() => _loadMoreData()}
+                style={styles.buttonLoadMore}
+            >
+                <Text style={styles.textLoadMore}>Load More...</Text>
+            </TouchableOpacity>
+        );
+
 
     return(
         <SafeAreaView
@@ -77,7 +97,15 @@ export const Home = props => {
                 ListEmptyComponent={ListEmpty}
                 ItemSeparatorComponent={renderSeparator}
                 contentContainerStyle={{paddingVertical: 16}}
-                // ListFooterComponent={<Text>hola</Text>}
+                ListFooterComponentStyle={{
+                    flex: 1,
+                    alignItems: 'center',
+                    padding: 10
+                }}
+                ListFooterComponent={nextPage
+                    ? loadMoreDataComponent
+                    : null
+                }
                 // onEndReached={loadMoreData}
                 // onEndReachedThreshold={0.5}
                 // onScrollBeginDrag={() => {
@@ -113,7 +141,19 @@ const styles = StyleSheet.create({
         flex: 1
     },
     imageEmpty: {
-       height: 400,
+        height: 400,
         width: 300
+   },
+    textLoadMore: {
+        color: Constant.colors.whiteColor,
+        fontWeight: 'bold'
+    },
+    buttonLoadMore: {
+        width: 100,
+        height: 60,
+        backgroundColor: "rgba(115,115,115,0.55)",
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 10
    }
 });
